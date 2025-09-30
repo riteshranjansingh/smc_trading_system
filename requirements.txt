@@ -1,0 +1,25 @@
+# Core Dependencies
+pandas==2.1.0
+numpy==1.25.2
+python-dotenv==1.0.0
+
+# HTTP & WebSocket
+requests==2.31.0
+websockets==11.0.3
+
+# Async
+asyncio==3.4.3
+
+# Telegram
+python-telegram-bot==20.5
+
+# Utilities
+pytz==2023.3
+
+# Testing
+pytest==7.4.2
+pytest-asyncio==0.21.1
+
+# Development
+black==23.7.0
+flake8==6.1.0

@@ -1,0 +1,14 @@
+{
+  "SOLUSD": {
+    "product_id": 27,
+    "qty_per_contract": 1,
+    "min_quantity": 1,
+    "tick_size": 0.01
+  },
+  "AAVEUSD": {
+    "product_id": 139,
+    "qty_per_contract": 1,
+    "min_quantity": 1,
+    "tick_size": 0.01
+  }
+}

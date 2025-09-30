@@ -1,0 +1,48 @@
+{
+  "account_name": "Mode A - Candle Close Entry",
+  "mode": "CANDLE_CLOSE",
+  "broker": "delta_exchange_india",
+  
+  "api_credentials": {
+    "base_url": "https://api.india.delta.exchange"
+  },
+  
+  "trading": {
+    "symbols": ["SOLUSD", "AAVEUSD"],
+    "timeframe": "15m",
+    "initial_capital_per_symbol": 100,
+    
+    "fresh_ob": {
+      "position_size_pct": 0.40,
+      "leverage": 20,
+      "entry_penetration_pct": 0.20,
+      "target_atr": 2.0,
+      "trailing_atr": 1.5
+    },
+    
+    "breaker_ob": {
+      "position_size_pct": 0.30,
+      "leverage": 10,
+      "entry_penetration_pct": 0.20,
+      "target_atr": 1.5,
+      "trailing_atr": 1.0
+    },
+    
+    "risk": {
+      "max_position_per_symbol": 1,
+      "cooldown_candles": 3,
+      "partial_profit_pct": 50
+    }
+  },
+  
+  "data": {
+    "historical_days": 180,
+    "data_dir": "data/account_1",
+    "log_file": "logs/account_1.log"
+  },
+  
+  "notifications": {
+    "telegram_enabled": true,
+    "message_prefix": "[Mode A]"
+  }
+}
