@@ -15,6 +15,10 @@ data/
 !config/*.json
 !config/*.example.json
 
+
+# But explicitly keep src/data
+!core/data/
+
 # Logs
 logs/
 *.log
