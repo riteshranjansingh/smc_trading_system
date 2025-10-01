@@ -1,0 +1,491 @@
+# SMC Trading System - Master Project Tracker
+
+**Last Updated:** Day 0 - Initial Setup  
+**Current Phase:** Foundation Setup  
+**Overall Progress:** 0/100
+
+---
+
+## PROJECT STATUS DASHBOARD
+
+```
+PHASE 1: FOUNDATION          [████░░░░░░] 40% (Setup in progress)
+PHASE 2: DATA LAYER          [░░░░░░░░░░]  0%
+PHASE 3: STRATEGY LAYER      [░░░░░░░░░░]  0%
+PHASE 4: EXECUTION LAYER     [░░░░░░░░░░]  0%
+PHASE 5: PRODUCTION          [░░░░░░░░░░]  0%
+PHASE 6: DASHBOARD           [░░░░░░░░░░]  0%
+```
+
+**Active Tasks:**
+- Setting up project structure
+- Configuring Git repository
+- Installing dependencies
+
+**Blockers:** None  
+**Next Milestone:** Complete Phase 1 Foundation
+
+---
+
+## PHASE 1: FOUNDATION (Days 0-1)
+
+**Goal:** Project structure, Git, configs, dependencies ready
+
+### 1.1 Project Setup ⏳ IN PROGRESS
+- [ ] Create folder structure
+- [ ] Initialize Git repository
+- [ ] Create .gitignore
+- [ ] Set up virtual environment
+- [ ] Install dependencies (requirements.txt)
+- [ ] Create README.md
+
+### 1.2 Configuration Files ⏳ IN PROGRESS
+- [ ] config/sub_account_1.json (Mode A)
+- [ ] config/sub_account_2.json (Mode B)
+- [ ] .env file (Telegram, secrets)
+- [ ] config/symbols_config.json
+
+### 1.3 Utilities Setup 🔜 PENDING
+- [ ] core/utils/logger.py
+- [ ] core/utils/state_persistence.py
+- [ ] Test logging system
+
+**Deliverables:**
+- ✓ Clean project structure
+- ✓ Git repository initialized
+- ✓ All configs in place
+- ✓ Logging working
+
+**Success Criteria:**
+- Python project runs without import errors
+- Git repository has first commit
+- Config files load correctly
+
+---
+
+## PHASE 2: DATA LAYER (Days 2-4)
+
+**Goal:** Fetch historical data, build real-time WebSocket, create candles
+
+### 2.1 Historical Data ⏸️ NOT STARTED
+- [ ] Integrate your api_client.py
+- [ ] Integrate your data_fetcher.py  
+- [ ] Modify csv_exporter.py for JSON output
+- [ ] Script: fetch_historical_data.py
+- [ ] Test: Fetch 6 months SOLUSD + AAVEUSD
+
+### 2.2 WebSocket Client ⏸️ NOT STARTED
+- [ ] core/data/websocket_client.py
+- [ ] Connect to Delta Exchange WebSocket
+- [ ] Subscribe to SOLUSD + AAVEUSD ticks
+- [ ] Handle reconnection logic
+- [ ] Test: Print live ticks to console
+
+### 2.3 Candle Builder ⏸️ NOT STARTED
+- [ ] core/data/candle_builder.py
+- [ ] Build 15m candles from tick data
+- [ ] Handle candle completion events
+- [ ] Validate candle OHLCV integrity
+- [ ] Test: Print completed 15m candles
+
+### 2.4 Data Validation ⏸️ NOT STARTED
+- [ ] core/data/data_validator.py
+- [ ] Validate OHLCV relationships
+- [ ] Check for gaps in data
+- [ ] Test: Validate historical + live data
+
+**Deliverables:**
+- ✓ 6 months historical data for both symbols
+- ✓ Live WebSocket connection stable
+- ✓ 15m candles building correctly
+
+**Success Criteria:**
+- Historical data matches your backtest files
+- WebSocket runs 24 hours without disconnect
+- Candle timestamps align perfectly with exchange
+
+---
+
+## PHASE 3: STRATEGY LAYER (Days 5-7)
+
+**Goal:** Order Block detection, market structure tracking
+
+### 3.1 Progressive SMC ⏸️ NOT STARTED
+- [ ] Port progressive_smc_simulator.py
+- [ ] Adapt for real-time updates
+- [ ] core/strategy/progressive_smc.py
+- [ ] Test: Run on historical data
+
+### 3.2 OB Manager ⏸️ NOT STARTED
+- [ ] core/strategy/ob_manager.py
+- [ ] Track active OBs in memory
+- [ ] Handle OB invalidation
+- [ ] Classify Fresh vs Breaker OBs
+- [ ] Test: Verify OBs match backtest
+
+### 3.3 Market Structure ⏸️ NOT STARTED
+- [ ] core/strategy/market_structure.py
+- [ ] Detect BOS (Break of Structure)
+- [ ] Detect CHoCH (Change of Character)
+- [ ] Test: Structure detection accuracy
+
+**Deliverables:**
+- ✓ OBs detected correctly from historical data
+- ✓ Real-time OB updates working
+- ✓ OB state persisted to JSON
+
+**Success Criteria:**
+- OBs match your backtest exactly
+- System detects new OBs within 1 second of candle close
+- No false OB invalidations
+
+---
+
+## PHASE 4: EXECUTION LAYER (Days 8-14)
+
+**Goal:** Trade execution for both modes, position management
+
+### 4.1 Broker Integration ⏸️ NOT STARTED
+- [ ] brokers/delta_exchange/delta_client.py
+- [ ] Authenticate with both sub-accounts
+- [ ] Place market orders
+- [ ] Place limit orders
+- [ ] Cancel orders
+- [ ] Fetch positions
+- [ ] Fetch order status
+- [ ] Test: Place test order (testnet)
+
+### 4.2 Position Sizing ⏸️ NOT STARTED
+- [ ] core/risk/position_sizer.py
+- [ ] Calculate contracts (40% fresh, 30% breaker)
+- [ ] Handle leverage (20x fresh, 10x breaker)
+- [ ] Floor to whole contracts
+- [ ] Test: Verify sizing math
+
+### 4.3 Position Manager ⏸️ NOT STARTED
+- [ ] core/risk/position_manager.py
+- [ ] Track positions per sub-account
+- [ ] Update capital after P&L
+- [ ] Enforce 1 position per symbol
+- [ ] Test: Simulate multiple trades
+
+### 4.4 Mode A Executor (Candle Close) ⏸️ NOT STARTED
+- [ ] core/execution/mode_a_executor.py
+- [ ] Entry: Check OB touch at candle close
+- [ ] Place market order if valid
+- [ ] Track entry fills
+- [ ] Test: Paper trade Mode A
+
+### 4.5 Mode B Executor (Limit Orders) ⏸️ NOT STARTED
+- [ ] core/execution/mode_b_executor.py
+- [ ] Entry: Place limit order at OB entry
+- [ ] Track pending orders
+- [ ] Handle partial fills
+- [ ] Cancel orders on OB invalidation
+- [ ] Test: Paper trade Mode B
+
+### 4.6 Stop Loss Manager ⏸️ NOT STARTED
+- [ ] core/risk/stop_loss_manager.py
+- [ ] Exit when price closes beyond OB
+- [ ] Place market stop loss order
+- [ ] Test: Verify SL triggers correctly
+
+### 4.7 Take Profit Manager ⏸️ NOT STARTED
+- [ ] core/risk/take_profit_manager.py
+- [ ] Partial exit at 2 ATR (50%)
+- [ ] Trailing stop logic
+- [ ] Different params for fresh/breaker
+- [ ] Test: Verify TP + trailing
+
+### 4.8 Order Manager ⏸️ NOT STARTED
+- [ ] core/execution/order_manager.py
+- [ ] Track all orders (pending, filled, cancelled)
+- [ ] Reconcile with broker state
+- [ ] Handle edge cases (rejections, etc.)
+- [ ] Test: All order scenarios
+
+### 4.9 Integration Test ⏸️ NOT STARTED
+- [ ] main.py - Orchestrate all modules
+- [ ] Load both sub-account configs
+- [ ] Run dual executors simultaneously
+- [ ] Test: 24-hour paper trading run
+
+**Deliverables:**
+- ✓ Both modes trading (paper money)
+- ✓ All entry/exit logic working
+- ✓ Position tracking accurate
+
+**Success Criteria:**
+- Paper trading P&L matches manual calculation
+- No missed trades (all valid OB touches taken)
+- No invalid trades (respects cooldown, max position)
+
+---
+
+## PHASE 5: PRODUCTION (Days 15-21)
+
+**Goal:** Live trading ready, monitoring, recovery
+
+### 5.1 Telegram Integration ⏸️ NOT STARTED
+- [ ] core/utils/telegram_notifier.py
+- [ ] Create Telegram bot
+- [ ] Send trade notifications
+- [ ] Send OB events
+- [ ] Send error alerts
+- [ ] Daily summary message
+- [ ] Test: Receive notifications
+
+### 5.2 State Persistence ⏸️ NOT STARTED
+- [ ] Save OB state to JSON (every update)
+- [ ] Save positions to JSON
+- [ ] Save capital tracker
+- [ ] Test: Save and load state
+
+### 5.3 Recovery System ⏸️ NOT STARTED
+- [ ] core/utils/recovery_manager.py
+- [ ] On startup: Load saved state
+- [ ] Fetch open positions from broker
+- [ ] Fetch missing candles since shutdown
+- [ ] Rebuild OBs from 6-month history
+- [ ] Test: Restart with open position
+
+### 5.4 Error Handling ⏸️ NOT STARTED
+- [ ] Comprehensive try-catch blocks
+- [ ] WebSocket reconnection
+- [ ] API error handling
+- [ ] Graceful degradation
+- [ ] Test: Simulate various failures
+
+### 5.5 Real Money Testing ⏸️ NOT STARTED
+- [ ] Start with $20 per symbol per mode
+- [ ] Monitor for 48 hours
+- [ ] Fix any bugs
+- [ ] Scale to $100 per symbol per mode
+- [ ] Test: Full week of live trading
+
+### 5.6 Auto-Restart Setup ⏸️ NOT STARTED
+- [ ] Configure launchd (Mac)
+- [ ] Auto-restart on crash
+- [ ] Auto-start on Mac boot
+- [ ] Test: Restart scenarios
+
+**Deliverables:**
+- ✓ System trading with real money
+- ✓ Notifications working
+- ✓ Recovery tested and working
+- ✓ Auto-restart configured
+
+**Success Criteria:**
+- System runs 7 days without manual intervention
+- All notifications received timely
+- Recovery from crash works perfectly
+- Real P&L matches expectations
+
+---
+
+## PHASE 6: DASHBOARD (Days 22-28) [OPTIONAL]
+
+**Goal:** Web UI for monitoring
+
+### 6.1 Next.js Setup ⏸️ NOT STARTED
+- [ ] Initialize Next.js project
+- [ ] Configure Tailwind CSS
+- [ ] Dark/light mode toggle
+- [ ] Responsive layout
+- [ ] Test: Dashboard loads
+
+### 6.2 Backend API ⏸️ NOT STARTED
+- [ ] API: GET /api/obs (active OBs)
+- [ ] API: GET /api/positions (current)
+- [ ] API: GET /api/trades (history)
+- [ ] API: GET /api/performance
+- [ ] Test: API endpoints work
+
+### 6.3 UI Components ⏸️ NOT STARTED
+- [ ] OB table component
+- [ ] Positions table
+- [ ] Trade history
+- [ ] Performance comparison (Mode A vs B)
+- [ ] Auto-refresh (15s)
+- [ ] Test: All components render
+
+### 6.4 Deployment ⏸️ NOT STARTED
+- [ ] Deploy locally (localhost:3000)
+- [ ] Add performance charts
+- [ ] Polish UI/UX
+- [ ] Test: Full dashboard functionality
+
+**Deliverables:**
+- ✓ Dashboard accessible via browser
+- ✓ Real-time data display
+- ✓ Performance comparison visible
+
+**Success Criteria:**
+- Dashboard updates every 15 seconds
+- All data accurate vs backend
+- Mobile-friendly responsive design
+
+---
+
+## KEY DECISIONS LOG
+
+### Architecture Decisions
+- **Single process, dual executors** - Efficient, shared data/OB detection
+- **Config-driven** - All parameters in JSON, no hardcoded values
+- **State persistence** - OBs and positions saved to JSON
+- **Recovery via historical rebuild** - Safer than relying on saved state alone
+
+### Trading Logic Decisions
+- **Entry Mode A:** Wait for candle close, then market order
+- **Entry Mode B:** Place limit order at OB entry (20% penetration)
+- **Stop Loss:** When price closes beyond OB (invalidation)
+- **Take Profit:** Partial exit at 2 ATR (50%), trail remainder
+- **Position Sizing:** 40% capital + 20x leverage (fresh), 30% + 10x (breaker)
+- **Max Positions:** 1 per symbol (cannot have SOL long in both modes)
+- **Cooldown:** 3 candles in same direction after exit
+
+### Technical Decisions
+- **Data:** Real-time WebSocket + 6-month historical for OBs
+- **Timeframe:** 15m only (for now)
+- **Symbols:** SOLUSD, AAVEUSD only (for now)
+- **Broker:** Delta Exchange India only
+- **Deployment:** Mac Mini 24/7, auto-restart on crash
+
+---
+
+## METRICS & TARGETS
+
+### Performance Targets (Week 3+)
+- Win rate: 55%+ (from backtest)
+- Profit factor: 1.5+ (from backtest)
+- Max drawdown: <20% (risk management)
+- Uptime: 99%+ (system reliability)
+
+### System Metrics
+- WebSocket uptime: 99.9%+
+- Order execution latency: <2s
+- OB detection delay: <1s from candle close
+- Recovery time: <3 minutes
+
+---
+
+## BLOCKERS & RISKS
+
+### Current Blockers
+- None
+
+### Known Risks
+1. **API rate limits** - Delta may throttle aggressive polling
+   - Mitigation: Use WebSocket, cache data
+2. **WebSocket disconnects** - Network issues
+   - Mitigation: Auto-reconnect with exponential backoff
+3. **Partial fills** - May not get full position filled
+   - Mitigation: Track pending orders, handle partials
+4. **Slippage** - Market orders may fill worse than expected
+   - Mitigation: Track actual fill prices, adjust if needed
+5. **Mac Mini failure** - Power/hardware issues
+   - Mitigation: UPS, auto-restart, Telegram alerts
+
+---
+
+## FILES CREATED (Checklist)
+
+### Core Files
+- [ ] main.py
+- [ ] requirements.txt
+- [ ] README.md
+- [ ] .gitignore
+- [ ] .env
+
+### Configuration
+- [ ] config/sub_account_1.json
+- [ ] config/sub_account_2.json
+- [ ] config/symbols_config.json
+
+### Data Layer
+- [ ] core/data/__init__.py
+- [ ] core/data/historical_loader.py
+- [ ] core/data/websocket_client.py
+- [ ] core/data/candle_builder.py
+- [ ] core/data/data_validator.py
+
+### Strategy Layer
+- [ ] core/strategy/__init__.py
+- [ ] core/strategy/progressive_smc.py
+- [ ] core/strategy/ob_manager.py
+- [ ] core/strategy/market_structure.py
+
+### Execution Layer
+- [ ] core/execution/__init__.py
+- [ ] core/execution/mode_a_executor.py
+- [ ] core/execution/mode_b_executor.py
+- [ ] core/execution/order_manager.py
+
+### Risk Management
+- [ ] core/risk/__init__.py
+- [ ] core/risk/position_manager.py
+- [ ] core/risk/position_sizer.py
+- [ ] core/risk/stop_loss_manager.py
+- [ ] core/risk/take_profit_manager.py
+
+### Broker Integration
+- [ ] brokers/__init__.py
+- [ ] brokers/base_broker.py
+- [ ] brokers/delta_exchange/__init__.py
+- [ ] brokers/delta_exchange/delta_client.py
+- [ ] brokers/delta_exchange/delta_websocket.py
+
+### Utilities
+- [ ] core/utils/__init__.py
+- [ ] core/utils/logger.py
+- [ ] core/utils/telegram_notifier.py
+- [ ] core/utils/state_persistence.py
+- [ ] core/utils/recovery_manager.py
+
+### Scripts
+- [ ] scripts/fetch_historical_data.py
+- [ ] scripts/test_telegram.py
+- [ ] scripts/validate_config.py
+
+### Tests
+- [ ] tests/__init__.py
+- [ ] tests/test_progressive_smc.py
+- [ ] tests/test_position_sizer.py
+- [ ] tests/test_ob_manager.py
+
+---
+
+## CONTACT & SUPPORT
+
+When you lose context or need to restart, refer to:
+1. This tracker (current state)
+2. The architecture blueprint artifact
+3. Git commit history
+4. Code comments in each module
+
+**Recovery Process:**
+1. Check this tracker for current phase
+2. Review last completed checkboxes
+3. Check Git for last commit
+4. Continue from next unchecked item
+
+---
+
+## NOTES & LEARNINGS
+
+### Day 0 Notes
+- Decided on single process with dual executors (more efficient)
+- Git repository for version control and sharing
+- Focus on SOLUSD and AAVEUSD only initially
+- 15m timeframe only for simplicity
+
+### Important Reminders
+- Always test on paper before real money
+- Start real money with $20 per symbol per mode
+- OB detection must match backtest exactly
+- Capital tracking updates after each trade P&L
+- No second position in same symbol across modes
+
+---
+
+**This tracker will be updated after each coding session. Treat it as the single source of truth for project state.**
