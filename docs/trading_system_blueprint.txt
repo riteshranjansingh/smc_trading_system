@@ -1,0 +1,580 @@
+# 🚀 Smart Money Concepts Trading System
+## Complete Project Architecture & Roadmap
+
+---
+
+## 📁 PROJECT FOLDER STRUCTURE
+
+```
+smc_trading_system/
+│
+├── README.md                          # Project overview
+├── requirements.txt                   # Python dependencies
+├── .env.example                       # Environment variables template
+├── .gitignore                        # Git ignore rules
+│
+├── main.py                           # 🎯 Main entry point
+├── start_trading.sh                  # Shell script to start system
+├── stop_trading.sh                   # Shell script to stop system
+│
+├── config/                           # 📋 Configuration files
+│   ├── sub_account_1.json           # Mode A: Candle close entry
+│   ├── sub_account_2.json           # Mode B: Limit order entry
+│   ├── telegram_config.json         # Telegram bot settings
+│   └── symbols_config.json          # Symbol-specific settings
+│
+├── core/                            # 🧠 Core business logic
+│   ├── __init__.py
+│   │
+│   ├── data/                        # Data management
+│   │   ├── __init__.py
+│   │   ├── historical_loader.py    # Fetch 6-month OHLCV data
+│   │   ├── websocket_client.py     # Real-time Delta Exchange feed
+│   │   ├── candle_builder.py       # Build 15m candles from ticks
+│   │   └── data_validator.py       # Validate data integrity
+│   │
+│   ├── strategy/                    # Trading strategy
+│   │   ├── __init__.py
+│   │   ├── progressive_smc.py      # Order block detection (from your backtest)
+│   │   ├── ob_manager.py           # OB state management
+│   │   └── market_structure.py     # BOS/CHoCH detection
+│   │
+│   ├── execution/                   # Trade execution
+│   │   ├── __init__.py
+│   │   ├── trade_executor.py       # Base executor class
+│   │   ├── mode_a_executor.py      # Candle close entry logic
+│   │   ├── mode_b_executor.py      # Limit order entry logic
+│   │   └── order_manager.py        # Track orders & fills
+│   │
+│   ├── risk/                        # Risk management
+│   │   ├── __init__.py
+│   │   ├── position_manager.py     # Position tracking per account
+│   │   ├── position_sizer.py       # Calculate contract size
+│   │   ├── stop_loss_manager.py    # SL logic (OB invalidation)
+│   │   └── take_profit_manager.py  # TP & trailing logic
+│   │
+│   └── utils/                       # Utilities
+│       ├── __init__.py
+│       ├── logger.py                # Centralized logging
+│       ├── telegram_notifier.py    # Telegram alerts
+│       ├── state_persistence.py    # Save/load OB state
+│       └── recovery_manager.py     # System restart recovery
+│
+├── brokers/                         # 🏦 Broker integrations
+│   ├── __init__.py
+│   ├── base_broker.py              # Abstract broker interface
+│   └── delta_exchange/
+│       ├── __init__.py
+│       ├── delta_client.py         # Delta API wrapper
+│       ├── delta_websocket.py      # Delta WebSocket wrapper
+│       └── delta_utils.py          # Helper functions
+│
+├── data/                            # 💾 Runtime data (gitignored)
+│   ├── historical/                  # Historical OHLCV data
+│   │   ├── SOLUSD_15m.csv
+│   │   └── AAVEUSD_15m.csv
+│   │
+│   ├── account_1/                   # Mode A data
+│   │   ├── ob_state.json           # Current OBs
+│   │   ├── positions.json          # Open positions
+│   │   ├── trades.csv              # Trade history
+│   │   └── capital_tracker.json   # Current capital per symbol
+│   │
+│   └── account_2/                   # Mode B data
+│       ├── ob_state.json
+│       ├── positions.json
+│       ├── trades.csv
+│       └── capital_tracker.json
+│
+├── logs/                            # 📝 Log files (gitignored)
+│   ├── main.log                     # System logs
+│   ├── account_1.log                # Mode A logs
+│   ├── account_2.log                # Mode B logs
+│   ├── trades.log                   # Trade execution logs
+│   └── errors.log                   # Error logs
+│
+├── tests/                           # 🧪 Unit tests
+│   ├── __init__.py
+│   ├── test_progressive_smc.py
+│   ├── test_position_sizer.py
+│   ├── test_ob_manager.py
+│   └── test_trade_executor.py
+│
+├── scripts/                         # 🛠️ Utility scripts
+│   ├── fetch_historical_data.py    # One-time historical data fetch
+│   ├── validate_config.py          # Check config files
+│   ├── test_telegram.py            # Test Telegram notifications
+│   └── backtest_compare.py         # Compare live vs backtest results
+│
+└── dashboard/                       # 🖥️ Next.js UI (Phase 2)
+    ├── package.json
+    ├── next.config.js
+    ├── pages/
+    │   └── index.js                 # Main dashboard
+    ├── components/
+    │   ├── OBTable.js               # Active OBs table
+    │   ├── PositionsTable.js        # Open positions
+    │   └── PerformanceChart.js      # Performance comparison
+    └── api/
+        ├── ob_state.js              # API endpoint for OBs
+        └── positions.js             # API endpoint for positions
+```
+
+---
+
+## 🏗️ SYSTEM ARCHITECTURE
+
+### **High-Level Design**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      TRADING SYSTEM                          │
+│                    (Single Python Process)                   │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │          DATA LAYER (Shared)                         │  │
+│  │  ┌─────────────────┐  ┌────────────────────────┐    │  │
+│  │  │ Historical      │  │ WebSocket Client       │    │  │
+│  │  │ Loader          │  │ (Delta Exchange)       │    │  │
+│  │  │ (6 months OHLCV)│  │ - SOLUSD ticks         │    │  │
+│  │  └────────┬────────┘  │ - AAVEUSD ticks        │    │  │
+│  │           │           └──────────┬─────────────┘    │  │
+│  │           │                      │                   │  │
+│  │           └──────────┬───────────┘                   │  │
+│  │                      ▼                               │  │
+│  │           ┌──────────────────────┐                   │  │
+│  │           │  Candle Builder      │                   │  │
+│  │           │  (15m OHLCV)         │                   │  │
+│  │           └──────────┬───────────┘                   │  │
+│  └──────────────────────┼────────────────────────────────┘  │
+│                         │                                    │
+│  ┌──────────────────────┼────────────────────────────────┐  │
+│  │          STRATEGY LAYER (Shared)                      │  │
+│  │                      ▼                                │  │
+│  │           ┌──────────────────────┐                   │  │
+│  │           │ Progressive SMC      │                   │  │
+│  │           │ Simulator            │                   │  │
+│  │           │ - Detect OBs         │                   │  │
+│  │           │ - Track invalidation │                   │  │
+│  │           │ - BOS/CHoCH          │                   │  │
+│  │           └──────────┬───────────┘                   │  │
+│  │                      │                               │  │
+│  │                      ▼                               │  │
+│  │           ┌──────────────────────┐                   │  │
+│  │           │  OB Manager          │                   │  │
+│  │           │  (Active OBs state)  │                   │  │
+│  │           └──────────┬───────────┘                   │  │
+│  └──────────────────────┼────────────────────────────────┘  │
+│                         │                                    │
+│         ┌───────────────┴───────────────┐                   │
+│         │                               │                   │
+│  ┌──────▼─────────────┐        ┌───────▼──────────────┐   │
+│  │  EXECUTION LAYER   │        │  EXECUTION LAYER     │   │
+│  │    (Mode A)        │        │    (Mode B)          │   │
+│  │                    │        │                      │   │
+│  │  Trade Executor A  │        │  Trade Executor B    │   │
+│  │  - Candle close    │        │  - Limit orders      │   │
+│  │  - Market orders   │        │  - Order tracking    │   │
+│  │                    │        │                      │   │
+│  │  ┌──────────────┐  │        │  ┌──────────────┐   │   │
+│  │  │ Position Mgr │  │        │  │ Position Mgr │   │   │
+│  │  │ Sub-Acc 1    │  │        │  │ Sub-Acc 2    │   │   │
+│  │  └──────┬───────┘  │        │  └──────┬───────┘   │   │
+│  │         │          │        │         │           │   │
+│  │         ▼          │        │         ▼           │   │
+│  │  ┌──────────────┐  │        │  ┌──────────────┐   │   │
+│  │  │ Delta API    │  │        │  │ Delta API    │   │   │
+│  │  │ (Account 1)  │  │        │  │ (Account 2)  │   │   │
+│  │  └──────────────┘  │        │  └──────────────┘   │   │
+│  └────────────────────┘        └─────────────────────┘   │
+│                                                            │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │          SUPPORT LAYER                               │  │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌────────────┐  │  │
+│  │  │ Logging     │  │ Telegram    │  │ State      │  │  │
+│  │  │ System      │  │ Notifier    │  │ Persistence│  │  │
+│  │  └─────────────┘  └─────────────┘  └────────────┘  │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🎯 DESIGN PRINCIPLES
+
+### **1. Modularity**
+- Each module has single responsibility
+- Clear interfaces between modules
+- Easy to test in isolation
+
+### **2. Scalability**
+- Add new brokers: Implement `BaseBroker` interface
+- Add new strategies: Implement `BaseStrategy` interface
+- Add new symbols: Just update config
+- Add Mode C/D/E: Create new executor class
+
+### **3. Configuration-Driven**
+- All parameters in JSON configs
+- No hardcoded values
+- Change settings without code changes
+
+### **4. Fault Tolerance**
+- Comprehensive error handling
+- Automatic recovery on restart
+- State persistence (OBs, positions)
+- Graceful degradation
+
+### **5. Observability**
+- Structured logging (JSON format)
+- Telegram real-time alerts
+- Trade history CSV for analysis
+- Performance metrics tracking
+
+---
+
+## 📅 DEVELOPMENT ROADMAP
+
+### **WEEK 1: Core Foundation** (Days 1-7)
+
+#### **Day 1: Project Setup**
+- [ ] Create folder structure
+- [ ] Set up virtual environment
+- [ ] Install dependencies (`requirements.txt`)
+- [ ] Configure Git repository
+- [ ] Create config templates
+
+#### **Day 2-3: Data Layer**
+- [ ] `historical_loader.py`: Fetch 6-month Delta data
+- [ ] `websocket_client.py`: Delta WebSocket connection
+- [ ] `candle_builder.py`: Build 15m candles from ticks
+- [ ] `data_validator.py`: Validate OHLCV data
+- [ ] Test: Fetch and display live candles
+
+#### **Day 4-5: Strategy Layer**
+- [ ] Port `progressive_smc.py` from your backtest
+- [ ] `ob_manager.py`: Track active OBs in memory
+- [ ] `market_structure.py`: BOS/CHoCH detection
+- [ ] Test: Run on historical data, verify OBs match backtest
+
+#### **Day 6-7: Broker Integration**
+- [ ] `delta_client.py`: API wrapper (orders, positions)
+- [ ] `delta_websocket.py`: Real-time feed wrapper
+- [ ] `delta_utils.py`: Authentication, helpers
+- [ ] Test: Place test order on Delta testnet
+
+**Milestone 1:** ✅ System can fetch data and detect OBs
+
+---
+
+### **WEEK 2: Trading Logic** (Days 8-14)
+
+#### **Day 8-9: Position Management**
+- [ ] `position_sizer.py`: Calculate contracts (40% fresh, 30% breaker)
+- [ ] `position_manager.py`: Track positions per account
+- [ ] Capital tracking (grows/shrinks with P&L)
+- [ ] Test: Verify position sizing math
+
+#### **Day 10-11: Trade Execution - Mode A**
+- [ ] `mode_a_executor.py`: Candle close entry
+- [ ] Entry logic: Check OB touch + favorable close
+- [ ] Exit logic: SL (OB invalidation), TP (2 ATR)
+- [ ] Trailing SL logic (from your backtest)
+- [ ] Test: Paper trade Mode A with mock orders
+
+#### **Day 12-13: Trade Execution - Mode B**
+- [ ] `mode_b_executor.py`: Limit order entry
+- [ ] Place limit at OB entry (20% penetration)
+- [ ] `order_manager.py`: Track pending orders
+- [ ] Handle fills, rejections, partial fills
+- [ ] Test: Paper trade Mode B with mock orders
+
+#### **Day 14: Integration**
+- [ ] `main.py`: Orchestrate all modules
+- [ ] Load both configs, run dual executors
+- [ ] State persistence (save/load OBs)
+- [ ] Test: Run both modes simultaneously (paper)
+
+**Milestone 2:** ✅ System can trade (paper mode)
+
+---
+
+### **WEEK 3: Production Ready** (Days 15-21)
+
+#### **Day 15-16: Risk Management**
+- [ ] `stop_loss_manager.py`: OB-based SL
+- [ ] `take_profit_manager.py`: Partial TP + trailing
+- [ ] 3-candle cooldown (same direction)
+- [ ] Max 1 position per symbol
+- [ ] Test: Verify all exit scenarios
+
+#### **Day 17: Notifications**
+- [ ] `telegram_notifier.py`: Telegram bot integration
+- [ ] Alerts: Trade entry/exit, OB events, errors
+- [ ] Daily summary message
+- [ ] Test: Send test notifications
+
+#### **Day 18: Recovery & Logging**
+- [ ] `recovery_manager.py`: Restart logic
+- [ ] Load saved state (OBs, positions)
+- [ ] Fetch missing candles since shutdown
+- [ ] Rebuild OBs from 6-month history
+- [ ] Comprehensive logging setup
+- [ ] Test: Restart system mid-trade
+
+#### **Day 19-20: Real Money Testing**
+- [ ] Deploy on Mac Mini
+- [ ] Start with $20 per symbol per mode
+- [ ] Monitor for 24-48 hours
+- [ ] Fix any bugs
+
+#### **Day 21: Scale Up**
+- [ ] Increase to $100 per symbol per mode
+- [ ] Set up auto-restart (launchd/cron)
+- [ ] Configure backups
+
+**Milestone 3:** ✅ Live trading with real money
+
+---
+
+### **WEEK 4: Dashboard (Optional but Recommended)** (Days 22-28)
+
+#### **Day 22-24: Next.js Setup**
+- [ ] Initialize Next.js project
+- [ ] Dark/light mode toggle
+- [ ] Responsive layout (mobile-friendly)
+- [ ] API routes to fetch data from Python
+
+#### **Day 25-26: Dashboard Components**
+- [ ] OB table (active OBs with age)
+- [ ] Positions table (both accounts)
+- [ ] Trade history (last 20 trades)
+- [ ] Performance comparison (Mode A vs B)
+- [ ] Auto-refresh (15 seconds)
+
+#### **Day 27-28: Polish**
+- [ ] Deploy dashboard locally
+- [ ] Add filters (by symbol, timeframe)
+- [ ] Performance charts (P&L over time)
+- [ ] Test all features
+
+**Milestone 4:** ✅ Full monitoring dashboard
+
+---
+
+## 🔧 TECHNOLOGY STACK
+
+### **Backend (Python)**
+- **Core:** Python 3.10+
+- **WebSocket:** `websockets` or `python-socketio`
+- **HTTP Client:** `requests`
+- **Data:** `pandas`, `numpy`
+- **Async:** `asyncio`
+- **Config:** `python-dotenv`, `json`
+- **Logging:** `logging` (built-in)
+- **Testing:** `pytest`
+
+### **Frontend (Next.js)**
+- **Framework:** Next.js 14
+- **Styling:** Tailwind CSS
+- **Charts:** Recharts or Chart.js
+- **HTTP Client:** Axios
+- **State:** React hooks (useState)
+
+### **Broker**
+- **Delta Exchange India API**
+- **WebSocket:** wss://socket.india.delta.exchange
+
+---
+
+## 📋 CONFIGURATION TEMPLATES
+
+### **Sub-Account Config (Mode A)**
+```json
+{
+  "account_name": "Mode A - Candle Close Entry",
+  "mode": "CANDLE_CLOSE",
+  "broker": "delta_exchange_india",
+  
+  "api_credentials": {
+    "api_key": "your_subaccount1_api_key",
+    "api_secret": "your_subaccount1_secret",
+    "base_url": "https://api.india.delta.exchange"
+  },
+  
+  "trading": {
+    "symbols": ["SOLUSD", "AAVEUSD"],
+    "timeframe": "15m",
+    "initial_capital_per_symbol": 100,
+    
+    "fresh_ob": {
+      "position_size_pct": 0.40,
+      "leverage": 20,
+      "target_atr": 2.0,
+      "trailing_atr": 1.5
+    },
+    
+    "breaker_ob": {
+      "position_size_pct": 0.30,
+      "leverage": 10,
+      "target_atr": 1.5,
+      "trailing_atr": 1.0
+    },
+    
+    "risk": {
+      "max_position_per_symbol": 1,
+      "cooldown_candles": 3,
+      "partial_profit_pct": 50
+    }
+  },
+  
+  "data": {
+    "historical_days": 180,
+    "data_dir": "data/account_1",
+    "log_file": "logs/account_1.log"
+  },
+  
+  "notifications": {
+    "telegram_enabled": true,
+    "message_prefix": "[Mode A]"
+  }
+}
+```
+
+---
+
+## 🚀 GETTING STARTED
+
+### **1. Clone & Setup**
+```bash
+# Create project directory
+mkdir smc_trading_system
+cd smc_trading_system
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Mac/Linux
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### **2. Configure**
+```bash
+# Copy config templates
+cp config/sub_account_1.example.json config/sub_account_1.json
+cp config/sub_account_2.example.json config/sub_account_2.json
+
+# Edit with your API keys
+nano config/sub_account_1.json
+```
+
+### **3. Fetch Historical Data**
+```bash
+python scripts/fetch_historical_data.py
+```
+
+### **4. Test**
+```bash
+# Run unit tests
+pytest tests/
+
+# Test Telegram
+python scripts/test_telegram.py
+
+# Validate configs
+python scripts/validate_config.py
+```
+
+### **5. Start Trading**
+```bash
+# Start system
+./start_trading.sh
+
+# Check logs
+tail -f logs/main.log
+
+# Stop system
+./stop_trading.sh
+```
+
+---
+
+## 📊 SUCCESS METRICS
+
+### **Week 1**
+✅ System fetches live data and detects OBs correctly
+
+### **Week 2**
+✅ Paper trading works for both modes
+✅ No crashes for 24 hours continuous run
+
+### **Week 3**
+✅ Real trades execute correctly
+✅ P&L matches manual calculation
+✅ System recovers from restart with trade open
+
+### **Week 4**
+✅ Dashboard shows live data
+✅ Performance comparison visible
+✅ System runs 7 days without intervention
+
+---
+
+## 🛡️ SAFETY CHECKLIST
+
+Before going live with real money:
+
+- [ ] Test all entry scenarios (fresh OB, breaker OB)
+- [ ] Test all exit scenarios (SL, TP, trailing, invalidation)
+- [ ] Test restart with open position
+- [ ] Test restart with pending limit order
+- [ ] Verify position sizing calculations
+- [ ] Verify leverage is correct
+- [ ] Test Telegram notifications
+- [ ] Set up Mac Mini auto-restart
+- [ ] Document emergency stop procedure
+- [ ] Start with minimum capital ($20)
+
+---
+
+## 📞 SUPPORT & TROUBLESHOOTING
+
+### **Common Issues**
+
+**WebSocket disconnects:**
+- Implement auto-reconnect logic
+- Use exponential backoff
+
+**Order rejected:**
+- Check margin availability
+- Verify contract size is valid
+- Check API rate limits
+
+**Data gaps:**
+- On restart, fetch missing candles
+- Validate candle continuity
+
+**OB mismatch with backtest:**
+- Log all OB events for debugging
+- Compare with TradingView
+
+---
+
+## 🎓 LEARNING RESOURCES
+
+- Delta Exchange API Docs: https://docs.delta.exchange/
+- WebSocket Python: https://websockets.readthedocs.io/
+- Next.js Docs: https://nextjs.org/docs
+- Your Backtest Code: Reference for all logic
+
+---
+
+## 📝 NOTES
+
+- This is a **living document** - update as we build
+- Keep this README in sync with code
+- Document all design decisions
+- Track bugs and feature requests
+
+**Let's build something amazing! 🚀**
