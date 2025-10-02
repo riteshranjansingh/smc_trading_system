@@ -500,7 +500,7 @@ When you lose context or need to restart, refer to:
 - Start real money with $20 per symbol per mode
 - OB detection must match backtest exactly
 - Capital tracking updates after each trade P&L
-- No second position in same symbol across modes
+
 
 ---
 
