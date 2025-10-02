@@ -116,7 +116,7 @@ print("4. TESTING WITH HISTORICAL DATA")
 print("-" * 80)
 
 # Load historical data
-data_file = Path("data/historical/SOLUSD_15m_2025-04-04_to_2025-10-01.json")
+data_file = Path("data/historical/SOLUSD_15m_2025-04-05_to_2025-10-02.json")
 
 if not data_file.exists():
     print(f"❌ Data file not found: {data_file}")
